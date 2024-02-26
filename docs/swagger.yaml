@@ -1,0 +1,197 @@
+definitions:
+  controller.BroadcastMessage:
+    properties:
+      capacity:
+        type: integer
+      clients_information:
+        additionalProperties:
+          $ref: '#/definitions/controller.PersonalInformation'
+        type: object
+      current_user_number:
+        type: integer
+      message:
+        type: string
+      room_name:
+        type: string
+    type: object
+  controller.PersonalInformation:
+    properties:
+      distance:
+        type: number
+      latitude:
+        type: number
+      longitude:
+        type: number
+      speed:
+        type: number
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  model.CleanUser:
+    properties:
+      display_name:
+        maxLength: 20
+        type: string
+      email:
+        maxLength: 50
+        type: string
+      id:
+        type: integer
+      role:
+        description: admin, common
+        type: integer
+      username:
+        type: string
+      verification_code:
+        description: this fiel
+        type: string
+      wechat_id:
+        type: string
+    type: object
+  model.Record:
+    properties:
+      average_speed:
+        description: 平均速度字段（单位可根据实际情况设定，例如千米每小时）
+        type: number
+      created_at:
+        type: string
+      distance:
+        type: number
+      end_time:
+        description: 结束时间字段
+        type: string
+      id:
+        type: integer
+      route_data:
+        description: 路线信息字段（可以是地理坐标序列，或者字符串形式的描述）
+        items:
+          type: integer
+        type: array
+      start_time:
+        description: 起始时间字段
+        type: string
+      type:
+        description: 运动类型字段
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        description: User
+        type: string
+    type: object
+info:
+  contact:
+    email: zhenxiang.shawn@outlook.com
+    name: Zhenxiang Jin
+  description: 微信小程序-酷跑, 后端 API
+  termsOfService: http://swagger.io/terms/
+  title: CoolRunner Backend API
+  version: "1.0"
+paths:
+  /login/WeChat:
+    get:
+      parameters:
+      - description: wx.Login request code
+        in: query
+        name: code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/model.CleanUser'
+      summary: 微信小程序登录/注册
+  /record/{user_openid}/update/{type}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 'User activity record, in JSON format. For Example: [{'
+        in: body
+        name: record
+        required: true
+        schema:
+          $ref: '#/definitions/model.Record'
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: string
+      summary: 上传训练记录
+  /run/room/create:
+    get:
+      consumes:
+      - application/json
+      description: '{Websocket} 创建房间,如果创建成功则自动加入该房间.'
+      parameters:
+      - description: Room ID
+        in: query
+        name: room_id
+        required: true
+        type: integer
+      - description: Room Name
+        in: query
+        name: room_name
+        required: true
+        type: string
+      - description: User ID(NOT OpenID)
+        in: query
+        name: creator
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/controller.BroadcastMessage'
+        "400":
+          description: 请求错误,错误信息在属性 Message 里,websocket 会自动断联.
+          schema:
+            type: string
+      summary: 创建房间
+  /run/room/join/{room_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User Display Name
+        in: query
+        name: user_name
+        required: true
+        type: integer
+      - description: User ID(NOT OpenID)
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/controller.BroadcastMessage'
+        "400":
+          description: 请求错误,错误信息在属性 Message 里,websocket 会自动断联.
+          schema:
+            type: string
+      summary: 加入房间
+  /user/update:
+    post:
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/model.CleanUser'
+      summary: 更新用户信息
+swagger: "2.0"
